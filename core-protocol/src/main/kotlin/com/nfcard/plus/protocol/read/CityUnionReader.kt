@@ -14,7 +14,7 @@ class CityUnionReader : PbocEpReader(CardKind.CITY_UNION) {
     override fun selectApp(tag: Iso7816Tag): Boolean = tag.selectByName(aid).isOk
 
     override fun read(tag: Iso7816Tag): CardApp? {
-        if (!resetTag(tag)) return null
+        resetTag(tag)
         if (!selectApp(tag)) return null
 
         val infoRsp = tag.readBinary(0x15)

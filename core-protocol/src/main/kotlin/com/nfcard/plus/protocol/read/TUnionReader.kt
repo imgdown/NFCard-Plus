@@ -18,7 +18,7 @@ class TUnionReader : PbocEpReader(CardKind.T_UNION) {
     override fun selectApp(tag: Iso7816Tag): Boolean = tag.selectByName(aid).isOk
 
     override fun read(tag: Iso7816Tag): CardApp? {
-        if (!resetTag(tag)) return null
+        resetTag(tag)
         if (!selectApp(tag)) return null
 
         val info = tag.readBinary(0x15).let { if (it.isOk) PbocParser.epInfo(it.data) else null }

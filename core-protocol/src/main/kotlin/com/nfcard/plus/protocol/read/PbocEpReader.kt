@@ -18,14 +18,19 @@ open class PbocEpReader(
     protected val mf: ByteArray = Bytes.fromHex("3F00")
     protected val epDf: ByteArray = Bytes.fromHex("1001")
     protected val pse: ByteArray = "1PAY.SYS.DDF01".toByteArray(Charsets.US_ASCII)
+    protected val ppse: ByteArray = "2PAY.SYS.DDF01".toByteArray(Charsets.US_ASCII)
 
-    protected open fun resetTag(tag: Iso7816Tag): Boolean =
-        tag.selectById(mf).isOk || tag.selectByName(pse).isOk
+    /** 尽力而为的复位：真实卡片可能拒绝全部复位指令，不能作为读取前提。 */
+    protected open fun resetTag(tag: Iso7816Tag) {
+        if (tag.selectById(mf).isOk) return
+        if (tag.selectByName(pse).isOk) return
+        tag.selectByName(ppse)
+    }
 
     protected open fun selectApp(tag: Iso7816Tag): Boolean = tag.selectById(epDf).isOk
 
     override fun read(tag: Iso7816Tag): CardApp? {
-        if (!resetTag(tag)) return null
+        resetTag(tag)
         if (!selectApp(tag)) return null
         val info = tag.readBinary(0x15).let { if (it.isOk) PbocParser.epInfo(it.data) else null }
         val balance = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }

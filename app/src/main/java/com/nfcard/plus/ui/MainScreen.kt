@@ -2,6 +2,7 @@ package com.nfcard.plus.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -127,6 +128,48 @@ private fun ReadContent(state: ReaderUiState, onModeChange: (ReadMode) -> Unit) 
     }
 
     state.report?.let { CardReportView(it) }
+
+    if (state.trace.isNotEmpty()) {
+        DiagnosticCard(state.trace)
+    }
+}
+
+@Composable
+private fun DiagnosticCard(trace: List<String>) {
+    val expandedState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("读卡诊断", style = MaterialTheme.typography.titleSmall)
+                Row {
+                    androidx.compose.material3.TextButton(onClick = {
+                        expandedState.value = !expandedState.value
+                    }) {
+                        Text(if (expandedState.value) "收起" else "展开")
+                    }
+                    androidx.compose.material3.TextButton(onClick = {
+                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(trace.joinToString("\n")))
+                    }) {
+                        Text("复制")
+                    }
+                }
+            }
+            if (expandedState.value) {
+                Text(
+                    trace.joinToString("\n"),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                )
+            } else {
+                Text("读卡异常时，点“复制”把诊断内容发给开发者即可定位问题。", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
 }
 
 @Composable
