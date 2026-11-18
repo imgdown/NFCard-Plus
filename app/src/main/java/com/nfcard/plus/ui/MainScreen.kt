@@ -186,7 +186,7 @@ private fun AboutContent() {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("当前版本支持读取", style = MaterialTheme.typography.titleMedium)
-            Text("· 交通联合卡（全国交通一卡通）：余额、卡号、有效期、发卡城市、交易明细、地铁进出站状态与时间、进出站过程记录")
+            Text("· 交通联合卡（全国交通一卡通）：余额、卡号、有效期、发卡城市、交易明细、地铁进出站状态与时间、进出站线路站点")
             Text("· 城市互联互通卡（住建部标准）")
             Text("· 北京市政一卡通")
             Text("· 武汉通")

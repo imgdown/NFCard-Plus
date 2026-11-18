@@ -78,17 +78,21 @@ private fun CardAppView(app: CardApp) {
                 InfoRow("当前状态", statusText)
                 metro.entryTime?.let { InfoRow("进站时间", it) }
                 metro.exitTime?.let { InfoRow("出站时间", it) }
-                if (metro.entryStation.any { c -> c != '0' }) InfoRow("进站站点代码", metro.entryStation)
-                if (metro.exitStation.any { c -> c != '0' }) InfoRow("出站站点代码", metro.exitStation)
-                if (metro.entryCityCode.any { c -> c != '0' }) {
-                    InfoRow("进站城市", cityLabel(metro.entryCityCode))
+                val entryLabel = com.nfcard.plus.protocol.StationFormatter.format(metro.entryStation, metro.entryCityCode)
+                if (entryLabel != null) {
+                    InfoRow("进站站点", entryLabel)
+                } else if (metro.entryStation.any { c -> c != '0' }) {
+                    InfoRow("进站站点代码", metro.entryStation)
                 }
-                if (metro.exitCityCode.any { c -> c != '0' }) {
-                    InfoRow("出站城市", cityLabel(metro.exitCityCode))
+                val exitLabel = com.nfcard.plus.protocol.StationFormatter.format(metro.exitStation, metro.exitCityCode)
+                if (exitLabel != null) {
+                    InfoRow("出站站点", exitLabel)
+                } else if (metro.exitStation.any { c -> c != '0' }) {
+                    InfoRow("出站站点代码", metro.exitStation)
                 }
-                if (metro.maxFareCents > 0) InfoRow("本次最高票价", money(metro.maxFareCents))
+                if (metro.maxFareCents > 0) InfoRow("本次票价上限", money(metro.maxFareCents))
                 Text(
-                    "状态依据卡内进出闸时间推导；站点为编码值，如需站名请以当地地铁公布信息为准。",
+                    "状态依据卡内进出闸时间推导；票价上限为本次行程最高扣费，实际扣费以交易明细为准（可能含当地优惠）。",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -97,29 +101,6 @@ private fun CardAppView(app: CardApp) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("交易明细（最近 ${app.transactions.size} 笔）", style = MaterialTheme.typography.titleMedium)
                 app.transactions.forEach { txn -> TxnRow(txn) }
-            }
-
-            if (app.processRecords.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-                Text("进出站过程记录", style = MaterialTheme.typography.titleMedium)
-                app.processRecords.forEach { p ->
-                    val kindText = when {
-                        p.typeCode == 0x03 -> "进站"
-                        p.amountCents > 0 -> "扣费 ${money(p.amountCents)}"
-                        else -> "零金额交易"
-                    }
-                    Column(modifier = Modifier.padding(vertical = 2.dp)) {
-                        Text("${p.dateTime}  $kindText", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "交易后余额 ${money(p.balanceAfterCents)} · 城市 ${cityLabel(p.cityCode)}",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                        Text(
-                            "站点代码 ${p.stationCode} · 终端 ${p.terminalId}",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
             }
         }
     }
