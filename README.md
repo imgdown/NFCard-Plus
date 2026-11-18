@@ -53,16 +53,20 @@ NFC 公交卡读取工具（安卓），对已停更的开源项目 [NFCard](htt
 - **Release**（推送 `v*` 标签）：单元测试通过 → 签名编译 Release（arm64-v8a / armeabi-v7a / x86_64 拆分包 + 通用包）→ 自动创建 GitHub Release 并附上全部 APK。
   - 本应用为纯 Kotlin 实现、无原生库，**通用包已兼容所有架构**；拆分包用于按架构分发。
 
-### 所需 GitHub Secrets（仅名称，值不入库）
+### Fork 与自定义开发
+
+欢迎 fork 本项目进行二次开发：fork 后可自行修改代码并运行测试（`./gradlew :core-protocol:test` 为纯 JVM 单元测试，无需真机与 NFC 硬件），CI 会自动验证你的改动。
+
+发布工作流通过 GitHub Secrets 注入签名信息。fork 后如需启用自动签名发布，在你自己仓库的 **Settings → Secrets and variables → Actions** 中配置以下 Secrets 即可（值不会进入仓库代码，工作流日志自动掩码，构建结束即删除临时密钥库文件）：
 
 | Secret | 用途 |
 | --- | --- |
-| `KEYSTORE_BASE64` | 签名密钥库文件的 Base64 |
+| `KEYSTORE_BASE64` | 你自己的签名密钥库文件的 Base64 |
 | `KEYSTORE_PASSWORD` | 密钥库口令 |
 | `KEY_ALIAS` | 密钥别名 |
 | `KEY_PASSWORD` | 密钥口令 |
 
-工作流中密钥仅经环境变量注入 Gradle，日志自动掩码，构建结束即删除临时密钥库文件。
+不配置签名 Secrets 也不影响 CI 的测试与 Debug 构建功能；仅标签触发的签名发布需要它们。请使用自己生成的密钥库签名 fork 版本，不要使用他人的发布密钥。
 
 ## 目录结构
 
