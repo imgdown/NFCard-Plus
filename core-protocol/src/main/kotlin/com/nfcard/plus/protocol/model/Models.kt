@@ -1,13 +1,18 @@
 package com.nfcard.plus.protocol.model
 
+/** 卡片大类：手动读取按大类分组展示，便于后续扩展其他卡类。 */
+enum class CardCategory(val label: String) {
+    TRANSIT("公共交通卡"),
+}
+
 /** 卡种。 */
-enum class CardKind(val label: String) {
-    T_UNION("交通联合"),
-    CITY_UNION("城市互联互通"),
-    BEIJING("北京一卡通"),
-    WUHAN("武汉通"),
-    SHENZHEN("深圳通"),
-    PBOC_EP("标准电子钱包"),
+enum class CardKind(val label: String, val category: CardCategory) {
+    T_UNION("交通联合", CardCategory.TRANSIT),
+    CITY_UNION("城市互联互通", CardCategory.TRANSIT),
+    BEIJING("北京一卡通", CardCategory.TRANSIT),
+    WUHAN("武汉通", CardCategory.TRANSIT),
+    SHENZHEN("深圳通", CardCategory.TRANSIT),
+    PBOC_EP("标准电子钱包", CardCategory.TRANSIT),
 }
 
 /** 电子钱包交易明细（0x18 文件，23 字节记录）。 */

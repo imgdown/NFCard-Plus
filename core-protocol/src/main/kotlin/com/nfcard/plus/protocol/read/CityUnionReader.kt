@@ -1,12 +1,13 @@
 package com.nfcard.plus.protocol.read
 
 import com.nfcard.plus.protocol.Bytes
+import com.nfcard.plus.protocol.CityUnionCities
 import com.nfcard.plus.protocol.Iso7816Tag
 import com.nfcard.plus.protocol.model.CardApp
 import com.nfcard.plus.protocol.model.CardKind
 import com.nfcard.plus.protocol.parse.PbocParser
 
-/** 城市互联互通（住建部标准）电子钱包读取器。 */
+/** 城市互联互通（住建部标准）电子钱包读取器，自动识别发卡城市与卡品牌。 */
 class CityUnionReader : PbocEpReader(CardKind.CITY_UNION) {
 
     private val aid = Bytes.fromHex("A00000000386980701")
@@ -20,15 +21,14 @@ class CityUnionReader : PbocEpReader(CardKind.CITY_UNION) {
         val infoRsp = tag.readBinary(0x15)
         val info = if (infoRsp.isOk) PbocParser.epInfo(infoRsp.data) else null
         val cityCode = if (infoRsp.isOk && infoRsp.data.size >= 4) Bytes.hex(infoRsp.data, 2, 2) else null
-        val cityName = when (cityCode) {
-            "2000" -> "上海"
-            "7100" -> "西安（长安通）"
-            else -> null
-        }
+        val city = cityCode?.let { CityUnionCities.city(it) }
+        val brand = cityCode?.let { CityUnionCities.brand(it) }
+        val displayName = brand ?: city?.let { "${it}城市互联卡" } ?: kind.label
         val balance = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }
         return baseApp(balance, info, readTransactions(tag)).copy(
+            displayName = displayName,
             cityCode = cityCode,
-            cityName = cityName,
+            cityName = city,
         )
     }
 }

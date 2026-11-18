@@ -1,5 +1,6 @@
 package com.nfcard.plus.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,16 +91,18 @@ fun MainScreen(state: ReaderUiState, nfcAvailable: Boolean, onModeChange: (ReadM
 @Composable
 private fun ReadContent(state: ReaderUiState, onModeChange: (ReadMode) -> Unit) {
     if (state.mode is ReadMode.Manual) {
-        Text("选择卡种后贴卡，将强制按所选卡种读取：", style = MaterialTheme.typography.bodyMedium)
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            CardKind.entries.forEach { kind ->
-                FilterChip(
-                    selected = state.mode.kind == kind,
-                    onClick = { onModeChange(ReadMode.Manual(kind)) },
-                    label = { Text(kind.label) },
-                )
-            }
+        Text("选择卡类与卡种后贴卡，将强制按所选卡种读取：", style = MaterialTheme.typography.bodyMedium)
+        com.nfcard.plus.protocol.model.CardCategory.entries.forEach { category ->
+            CategorySection(
+                category = category,
+                selected = state.mode.kind,
+                onSelect = { onModeChange(ReadMode.Manual(it)) },
+            )
         }
+        Text(
+            "银行卡、ETC 等更多卡类将在后续版本加入，按大类分组展示。",
+            style = MaterialTheme.typography.bodySmall,
+        )
     } else {
         Text(
             "将公交卡贴近手机背面 NFC 感应区，自动识别并读取全部应用。",
@@ -173,6 +176,47 @@ private fun DiagnosticCard(trace: List<String>) {
 }
 
 @Composable
+private fun CategorySection(
+    category: com.nfcard.plus.protocol.model.CardCategory,
+    selected: CardKind,
+    onSelect: (CardKind) -> Unit,
+) {
+    val kinds = CardKind.entries.filter { it.category == category }
+    val expandedState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandedState.value = !expandedState.value },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(category.label, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "${kinds.size} 种 · ${if (expandedState.value) "收起" else "展开"}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            if (expandedState.value) {
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    kinds.forEach { kind ->
+                        FilterChip(
+                            selected = selected == kind,
+                            onClick = { onSelect(kind) },
+                            label = { Text(kind.label) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AboutContent() {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -187,12 +231,12 @@ private fun AboutContent() {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("当前版本支持读取", style = MaterialTheme.typography.titleMedium)
             Text("· 交通联合卡（全国交通一卡通）：余额、卡号、有效期、发卡城市、交易明细、地铁进出站状态与时间、进出站线路站点")
-            Text("· 城市互联互通卡（住建部标准）")
+            Text("· 城市互联互通卡（住建部标准）：自动识别发卡城市，覆盖上海公共交通卡、南京金陵通、西安长安通等 300 余个城市代码")
             Text("· 北京市政一卡通")
             Text("· 武汉通")
             Text("· 深圳通")
             Text("· 标准 PBOC 电子钱包公交卡")
-            Text("后续版本计划：ETC 卡、银联电子现金、更多城市卡种、鸿蒙 NEXT 版")
+            Text("后续版本计划：ETC 卡、银联电子现金、地方旅游票卡适配、更多城市卡种、鸿蒙 NEXT 版")
         }
     }
     Card(modifier = Modifier.fillMaxWidth()) {
