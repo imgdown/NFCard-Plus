@@ -5,43 +5,48 @@ import com.nfcard.plus.protocol.model.ManagementInfo
 import com.nfcard.plus.protocol.model.MetroInfo
 import com.nfcard.plus.protocol.model.ProcessRecord
 
-/** 交通联合（交通部互联互通规范）专用数据解析。 */
+/** 交通联合（交通部互联互通规范）专用数据解析。布局经真实卡片实测核对。 */
 object TUnionParser {
 
-    const val METRO_RECORD_ID = 0x2704
-    const val BUS_RECORD_ID = 0x2703
+    /** 实测地铁应用信息记录 ID。 */
+    const val METRO_RECORD_ID = 0x2701
 
-    /** 0x1A 地铁应用信息记录（128 字节，记录 ID 0x2704）。ID 不符或长度不足返回 null。 */
+    /** 兼容部分规范文档中的地铁记录 ID。 */
+    const val METRO_RECORD_ID_ALT = 0x2704
+
+    const val BUS_RECORD_ID = 0x2702
+
+    /** 0x1A 地铁应用信息记录（128 字节紧凑布局）。ID 不符或长度不足返回 null。 */
     fun metroRecord(data: ByteArray): MetroInfo? {
-        if (data.size < 96) return null
-        if (Bytes.intBE(data, 0, 2).toInt() != METRO_RECORD_ID) return null
-        val entryDigits = Bytes.bcd(data, 78, 7)
-        val exitDigits = Bytes.bcd(data, 85, 7)
+        if (data.size < 85) return null
+        val id = Bytes.intBE(data, 0, 2).toInt()
+        if (id != METRO_RECORD_ID && id != METRO_RECORD_ID_ALT) return null
+        val entryDigits = Bytes.bcd(data, 67, 7)
+        val exitDigits = Bytes.bcd(data, 74, 7)
         return MetroInfo(
-            stateCode = data[25].toInt() and 0xFF,
-            entryCityCode = Bytes.bcd(data, 26, 2),
-            exitCityCode = Bytes.bcd(data, 28, 2),
-            entryAgency = Bytes.bcd(data, 30, 8),
-            exitAgency = Bytes.bcd(data, 38, 8),
-            entryStation = Bytes.bcd(data, 46, 8),
-            exitStation = Bytes.bcd(data, 54, 8),
-            entryTerminal = Bytes.bcd(data, 62, 8),
-            exitTerminal = Bytes.bcd(data, 70, 8),
+            entryCityCode = Bytes.bcd(data, 15, 2),
+            exitCityCode = Bytes.bcd(data, 17, 2),
+            entryAgency = Bytes.bcd(data, 19, 8),
+            exitAgency = Bytes.bcd(data, 27, 8),
+            entryStation = Bytes.bcd(data, 35, 8),
+            exitStation = Bytes.bcd(data, 43, 8),
+            entryTerminal = Bytes.bcd(data, 51, 8),
+            exitTerminal = Bytes.bcd(data, 59, 8),
             entryTime = if (PbocParser.isZeroDigits(entryDigits)) null else PbocParser.formatDateTime(entryDigits),
             exitTime = if (PbocParser.isZeroDigits(exitDigits)) null else PbocParser.formatDateTime(exitDigits),
-            maxFareCents = Bytes.intBE(data, 92, 4),
+            maxFareCents = Bytes.intBE(data, 81, 4),
         )
     }
 
-    /** 0x1E 互联互通循环记录（48 字节）。全零记录视为空返回 null。 */
+    /** 0x1E 互联互通循环记录（48 字节，实测布局）。全零记录视为空返回 null。 */
     fun processRecord(data: ByteArray): ProcessRecord? {
         if (data.size < 48) return null
         if (data.all { it == 0.toByte() }) return null
         return ProcessRecord(
             typeCode = data[0].toInt() and 0xFF,
-            terminalId = Bytes.bcd(data, 1, 8),
-            seq = Bytes.bcd(data, 9, 8),
-            amountCents = Bytes.intBE(data, 17, 4),
+            terminalId = Bytes.hex(data, 3, 7),
+            stationCode = Bytes.hex(data, 10, 4),
+            amountCents = Bytes.intBE(data, 14, 4),
             balanceAfterCents = Bytes.intBE(data, 21, 4),
             dateTime = PbocParser.formatDateTime(Bytes.bcd(data, 25, 7)),
             cityCode = Bytes.bcd(data, 32, 2),

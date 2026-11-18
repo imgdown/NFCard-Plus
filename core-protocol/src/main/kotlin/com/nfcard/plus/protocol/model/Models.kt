@@ -24,12 +24,11 @@ data class TxnRecord(
     val isDebit: Boolean get() = typeCode == 0x06 || typeCode == 0x09
 }
 
-/** 地铁进出站状态（依据进出闸时间推导，原始状态码一并保留）。 */
+/** 地铁进出站状态（依据卡内进出闸时间推导）。 */
 enum class MetroStatus { ENTERED_NOT_EXITED, EXITED, NO_RECORD }
 
-/** 地铁应用信息记录（0x1A 文件，记录 ID 0x2704，128 字节）。 */
+/** 地铁应用信息记录（0x1A 文件，实测记录 ID 0x2701，128 字节紧凑布局）。 */
 data class MetroInfo(
-    val stateCode: Int,
     val entryCityCode: String,
     val exitCityCode: String,
     val entryAgency: String,
@@ -50,11 +49,11 @@ data class MetroInfo(
         }
 }
 
-/** 互联互通过程记录（0x1E 文件，48 字节记录）。 */
+/** 互联互通过程记录（0x1E 文件，48 字节，实测布局）。 */
 data class ProcessRecord(
     val typeCode: Int,
     val terminalId: String,
-    val seq: String,
+    val stationCode: String,
     val amountCents: Long,
     val balanceAfterCents: Long,
     val dateTime: String,

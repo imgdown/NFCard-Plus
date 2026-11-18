@@ -28,17 +28,20 @@ object PbocParser {
         )
     }
 
-    /** 0x18 交易明细单条记录（23 字节）。金额为零的记录视为空记录返回 null。 */
+    /** 0x18 交易明细单条记录（23 字节）。全零空槽返回 null；零金额复合消费为有效进站记录。 */
     fun txnRecord(data: ByteArray): TxnRecord? {
         if (data.size < 23) return null
         val amount = Bytes.intBE(data, 5, 4)
-        if (amount == 0L) return null
+        val type = data[9].toInt() and 0xFF
+        val dateDigits = Bytes.bcd(data, 16, 4)
+        val isEmptySlot = amount == 0L && (type == 0 || isZeroDigits(dateDigits))
+        if (isEmptySlot) return null
         return TxnRecord(
             seq = Bytes.intBE(data, 0, 2).toInt(),
             amountCents = amount,
-            typeCode = data[9].toInt() and 0xFF,
+            typeCode = type,
             terminalId = Bytes.bcd(data, 10, 6),
-            date = formatDate(Bytes.bcd(data, 16, 4)),
+            date = formatDate(dateDigits),
             time = formatTime(Bytes.bcd(data, 20, 3)),
             overdrawCents = Bytes.intBE(data, 2, 3),
         )

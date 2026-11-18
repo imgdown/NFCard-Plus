@@ -59,4 +59,17 @@ class TUnionReaderTest {
         assertNull(app.cityCode)
         assertEquals(0, app.processRecords.size)
     }
+
+    @Test
+    fun `balance falls back to standard type when extended type unsupported`() {
+        val routes = tUnionRoutes().toMutableMap()
+        routes["805C000304"] = Bytes.fromHex("6A86")
+        routes["805C000204"] = ScriptedTransport.ok(FakeCards.balance("0000032A"))
+        routes["805C000104"] = Bytes.fromHex("6A86")
+        val tag = Iso7816Tag(ScriptedTransport.routing(routes))
+        val app = TUnionReader().read(tag)!!
+        assertEquals(810L, app.balanceCents)
+        assertNull(app.overdrawUsedCents)
+        assertNull(app.overdrawLimitCents)
+    }
 }

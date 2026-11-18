@@ -22,9 +22,21 @@ class TUnionReader : PbocEpReader(CardKind.T_UNION) {
         if (!selectApp(tag)) return null
 
         val info = tag.readBinary(0x15).let { if (it.isOk) PbocParser.epInfo(it.data) else null }
-        val balance = tag.getBalance(0x03).let { if (it.isOk) PbocParser.balance(it.data) else null }
-        val overUsed = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }
-        val overLimit = tag.getBalance(0x01).let { if (it.isOk) PbocParser.balance(it.data) else null }
+        // 部分卡片仅支持标准余额查询类型（0x02），不支持扩展类型（0x03）：
+        // 扩展类型成功时 0x02/0x01 为透支信息；扩展类型失败时 0x02 即余额。
+        val extended = tag.getBalance(0x03)
+        val balance: Long?
+        val overUsed: Long?
+        val overLimit: Long?
+        if (extended.isOk) {
+            balance = PbocParser.balance(extended.data)
+            overUsed = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }
+            overLimit = tag.getBalance(0x01).let { if (it.isOk) PbocParser.balance(it.data) else null }
+        } else {
+            balance = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }
+            overUsed = null
+            overLimit = null
+        }
         val mgmt = tag.readBinary(0x17).let { if (it.isOk) TUnionParser.managementInfo(it.data) else null }
         val transactions = readTransactions(tag, 0x18)
         val metro = readMetro(tag)

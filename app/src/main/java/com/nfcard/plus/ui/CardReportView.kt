@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nfcard.plus.protocol.CityCodes
 import com.nfcard.plus.protocol.model.CardApp
 import com.nfcard.plus.protocol.model.CardReport
 import com.nfcard.plus.protocol.model.MetroStatus
@@ -23,6 +24,10 @@ internal fun money(cents: Long): String {
     val abs = kotlin.math.abs(cents)
     return "$sign¥${abs / 100}.${"%02d".format(abs % 100)}"
 }
+
+/** 城市代码后附城市名（可解析时）。 */
+internal fun cityLabel(code: String): String =
+    CityCodes.name(code)?.let { "$code（$it）" } ?: code
 
 @Composable
 fun CardReportView(report: CardReport) {
@@ -56,7 +61,7 @@ private fun CardAppView(app: CardApp) {
             }
             app.serial?.let { InfoRow("卡号", it) }
             app.cityName?.let { InfoRow("发卡城市", it) }
-                ?: app.cityCode?.let { InfoRow("城市代码", it) }
+                ?: app.cityCode?.let { InfoRow("城市代码", cityLabel(it)) }
             app.version?.let { InfoRow("应用版本", it) }
             if (app.validFrom != null && app.validTo != null) {
                 InfoRow("有效期", "${app.validFrom} 至 ${app.validTo}")
@@ -76,7 +81,10 @@ private fun CardAppView(app: CardApp) {
                 if (metro.entryStation.any { c -> c != '0' }) InfoRow("进站站点代码", metro.entryStation)
                 if (metro.exitStation.any { c -> c != '0' }) InfoRow("出站站点代码", metro.exitStation)
                 if (metro.entryCityCode.any { c -> c != '0' }) {
-                    InfoRow("进站城市代码", metro.entryCityCode)
+                    InfoRow("进站城市", cityLabel(metro.entryCityCode))
+                }
+                if (metro.exitCityCode.any { c -> c != '0' }) {
+                    InfoRow("出站城市", cityLabel(metro.exitCityCode))
                 }
                 if (metro.maxFareCents > 0) InfoRow("本次最高票价", money(metro.maxFareCents))
                 Text(
@@ -95,13 +103,19 @@ private fun CardAppView(app: CardApp) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("进出站过程记录", style = MaterialTheme.typography.titleMedium)
                 app.processRecords.forEach { p ->
+                    val kindText = when {
+                        p.typeCode == 0x03 -> "进站"
+                        p.amountCents > 0 -> "扣费 ${money(p.amountCents)}"
+                        else -> "零金额交易"
+                    }
                     Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                        Text("${p.dateTime}  $kindText", style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "${p.dateTime}  ${if (p.amountCents > 0) money(p.amountCents) else "进站记录"}",
-                            style = MaterialTheme.typography.bodyMedium,
+                            "交易后余额 ${money(p.balanceAfterCents)} · 城市 ${cityLabel(p.cityCode)}",
+                            style = MaterialTheme.typography.bodySmall,
                         )
                         Text(
-                            "交易后余额 ${money(p.balanceAfterCents)} · 城市代码 ${p.cityCode} · 终端 ${p.terminalId}",
+                            "站点代码 ${p.stationCode} · 终端 ${p.terminalId}",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -121,13 +135,15 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun TxnRow(txn: TxnRecord) {
-    val typeText = when (txn.typeCode) {
-        0x06 -> "消费"
-        0x09 -> "复合消费"
-        0x02 -> "圈存"
+    val isEntry = txn.amountCents == 0L && txn.typeCode == 0x09
+    val typeText = when {
+        isEntry -> "复合消费（进站）"
+        txn.typeCode == 0x06 -> "消费"
+        txn.typeCode == 0x09 -> "复合消费"
+        txn.typeCode == 0x02 -> "圈存"
         else -> "交易(类型%02X)".format(txn.typeCode)
     }
-    val amountText = (if (txn.isDebit) "-" else "+") + money(txn.amountCents).removePrefix("¥").let { "¥$it" }
+    val amountText = if (isEntry) "¥0.00" else (if (txn.isDebit) "-" else "+") + money(txn.amountCents)
     Column(modifier = Modifier.padding(vertical = 2.dp)) {
         Text("${txn.date} ${txn.time}  $typeText  $amountText", style = MaterialTheme.typography.bodyMedium)
         Text("序号 ${txn.seq} · 终端 ${txn.terminalId}", style = MaterialTheme.typography.bodySmall)

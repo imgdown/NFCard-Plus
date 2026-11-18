@@ -80,6 +80,18 @@ class PbocParserTest {
     }
 
     @Test
+    fun `zero amount composite consumption is a valid entry record`() {
+        val raw = Bytes.fromHex(
+            "0001" + "000000" + "00000000" + "09" +
+                "000000000001" + "20261118" + "154617",
+        )
+        val txn = PbocParser.txnRecord(raw)!!
+        assertEquals(0L, txn.amountCents)
+        assertTrue(txn.isDebit)
+        assertEquals("2026-11-18", txn.date)
+    }
+
+    @Test
     fun `splitRecords splits concatenated records and drops remainder`() {
         val one = "000A" + "000000" + "000001F4" + "09" + "000000000001" + "20261118" + "083015"
         val raw = Bytes.fromHex(one + one + "FFFF")

@@ -10,7 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * 回归测试：真实卡片（如绿城通交通联合卡）可能拒绝 MF/PSE 复位指令，
+ * 回归测试：部分真实卡片会拒绝 MF/PSE 复位指令，
  * 但直接选择交通联合 AID 仍可成功。复位必须是尽力而为，不能作为读取前提。
  */
 class TUnionResetRegressionTest {
