@@ -132,6 +132,8 @@ private fun ReadContent(state: ReaderUiState, onModeChange: (ReadMode) -> Unit) 
 
     state.report?.let { CardReportView(it) }
 
+    state.memory?.let { MemoryCardView(it) }
+
     if (state.trace.isNotEmpty()) {
         DiagnosticCard(state.trace)
     }
@@ -236,6 +238,7 @@ private fun AboutContent() {
             Text("· 武汉通")
             Text("· 深圳通")
             Text("· 标准 PBOC 电子钱包公交卡")
+            Text("· 存储型票卡（Mifare Classic/Ultralight，地铁单程票、计时畅游票等）：自动密钥认证、城市识别、值块与乘车记录读取")
             Text("后续版本计划：ETC 卡、银联电子现金、地方旅游票卡适配、更多城市卡种、鸿蒙 NEXT 版")
         }
     }

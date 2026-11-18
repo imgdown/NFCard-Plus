@@ -43,7 +43,9 @@ object AutoReader {
 object ManualReader {
 
     fun read(transport: CardTransport, kind: CardKind): CardReport {
-        val reader = AutoReader.readers().first { it.kind == kind }
+        // 存储型票卡不走 ISO-DEP 读取器，由应用层专用通道处理
+        val reader = AutoReader.readers().firstOrNull { it.kind == kind }
+            ?: return CardReport(emptyList())
         return AutoReader.runReaders(Iso7816Tag(transport), listOf(reader))
     }
 }

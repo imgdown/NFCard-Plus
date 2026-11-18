@@ -89,4 +89,14 @@ class AutoReaderTest {
         )
         assertTrue(report.apps.isEmpty())
     }
+
+    @Test
+    fun `manual reader returns empty report for memory card kind`() {
+        val report = ManualReader.read(
+            ScriptedTransport { ScriptedTransport.NOT_FOUND },
+            CardKind.MEMORY_CARD,
+        )
+        assertTrue(report.apps.isEmpty())
+        assertTrue(report.failures.isEmpty())
+    }
 }

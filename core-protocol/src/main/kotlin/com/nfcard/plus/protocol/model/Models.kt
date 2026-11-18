@@ -13,6 +13,7 @@ enum class CardKind(val label: String, val category: CardCategory) {
     WUHAN("武汉通", CardCategory.TRANSIT),
     SHENZHEN("深圳通", CardCategory.TRANSIT),
     PBOC_EP("标准电子钱包", CardCategory.TRANSIT),
+    MEMORY_CARD("票卡/存储卡", CardCategory.TRANSIT),
 }
 
 /** 电子钱包交易明细（0x18 文件，23 字节记录）。 */

@@ -12,8 +12,8 @@ android {
         applicationId = "com.nfcard.plus"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.1.0"
+        versionCode = 6
+        versionName = "1.2.0"
     }
 
     // 签名信息只从环境变量读取（CI 中由 GitHub Secrets 注入），仓库中不含任何密钥
