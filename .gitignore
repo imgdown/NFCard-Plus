@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# 签名与机密（严禁提交）
+*.jks
+*.keystore
+keystore.properties
+secrets/
+*.p12
+*.pem
+*.mobileprovision
+
+# 日志
+*.log

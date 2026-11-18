@@ -1,0 +1,12 @@
+{
+  "name": "nfcard-plus-harmony",
+  "version": "1.0.0",
+  "description": "NFCard-Plus HarmonyOS NEXT skeleton",
+  "main": "",
+  "author": "imgdown",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.19"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "NFCard-Plus entry module",
+  "main": "",
+  "author": "imgdown",
+  "license": "Apache-2.0",
+  "dependencies": {}
+}
