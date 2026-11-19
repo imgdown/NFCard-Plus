@@ -100,7 +100,7 @@ private fun ReadContent(state: ReaderUiState, onModeChange: (ReadMode) -> Unit) 
             )
         }
         Text(
-            "银行卡、ETC 等更多卡类将在后续版本加入，按大类分组展示。",
+            "银行卡等更多卡类将在后续版本加入，按大类分组展示。",
             style = MaterialTheme.typography.bodySmall,
         )
     } else {
@@ -239,7 +239,8 @@ private fun AboutContent() {
             Text("· 深圳通")
             Text("· 标准 PBOC 电子钱包公交卡")
             Text("· 存储型票卡（Mifare Classic/Ultralight，地铁单程票、计时畅游票等）：自动密钥认证、城市识别、值块与乘车记录读取")
-            Text("后续版本计划：ETC 卡、银联电子现金、地方旅游票卡适配、更多城市卡种、鸿蒙 NEXT 版")
+            Text("· ETC 用户卡：车牌/颜色/车型、持卡人姓名与证件号（默认掩码）、卡号与有效期、入口出口通行记录")
+            Text("后续版本计划：银联电子现金、地方旅游票卡字段适配、更多城市卡种、鸿蒙 NEXT 版")
         }
     }
     Card(modifier = Modifier.fillMaxWidth()) {

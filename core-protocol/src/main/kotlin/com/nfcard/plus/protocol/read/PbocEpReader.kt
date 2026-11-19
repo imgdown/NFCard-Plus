@@ -32,7 +32,10 @@ open class PbocEpReader(
     override fun read(tag: Iso7816Tag): CardApp? {
         resetTag(tag)
         if (!selectApp(tag)) return null
-        val info = tag.readBinary(0x15).let { if (it.isOk) PbocParser.epInfo(it.data) else null }
+        val infoRsp = tag.readBinary(0x15)
+        // 发行文件达 43/50 字节为 ETC 用户卡特征，非标准电子钱包（30 字节）
+        if (infoRsp.isOk && infoRsp.data.size >= 43) return null
+        val info = if (infoRsp.isOk) PbocParser.epInfo(infoRsp.data) else null
         val balance = tag.getBalance(0x02).let { if (it.isOk) PbocParser.balance(it.data) else null }
         return baseApp(balance, info, readTransactions(tag))
     }

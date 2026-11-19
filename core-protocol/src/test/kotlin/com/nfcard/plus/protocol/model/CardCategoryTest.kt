@@ -6,14 +6,21 @@ import org.junit.Test
 class CardCategoryTest {
 
     @Test
-    fun `all current kinds belong to transit category`() {
-        CardKind.entries.forEach { kind ->
-            assertEquals(CardCategory.TRANSIT, kind.category)
-        }
+    fun `transit kinds belong to transit category`() {
+        listOf(
+            CardKind.T_UNION, CardKind.CITY_UNION, CardKind.BEIJING,
+            CardKind.WUHAN, CardKind.SHENZHEN, CardKind.PBOC_EP, CardKind.MEMORY_CARD,
+        ).forEach { kind -> assertEquals(CardCategory.TRANSIT, kind.category) }
     }
 
     @Test
-    fun `transit category has readable label`() {
+    fun `etc kind belongs to etc category`() {
+        assertEquals(CardCategory.ETC, CardKind.ETC.category)
+    }
+
+    @Test
+    fun `categories have readable labels`() {
         assertEquals("公共交通卡", CardCategory.TRANSIT.label)
+        assertEquals("ETC卡", CardCategory.ETC.label)
     }
 }

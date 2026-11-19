@@ -3,6 +3,7 @@ package com.nfcard.plus.protocol.model
 /** 卡片大类：手动读取按大类分组展示，便于后续扩展其他卡类。 */
 enum class CardCategory(val label: String) {
     TRANSIT("公共交通卡"),
+    ETC("ETC卡"),
 }
 
 /** 卡种。 */
@@ -14,6 +15,7 @@ enum class CardKind(val label: String, val category: CardCategory) {
     SHENZHEN("深圳通", CardCategory.TRANSIT),
     PBOC_EP("标准电子钱包", CardCategory.TRANSIT),
     MEMORY_CARD("票卡/存储卡", CardCategory.TRANSIT),
+    ETC("ETC用户卡", CardCategory.ETC),
 }
 
 /** 电子钱包交易明细（0x18 文件，23 字节记录）。 */
@@ -101,6 +103,7 @@ data class CardApp(
     val transactions: List<TxnRecord> = emptyList(),
     val metro: MetroInfo? = null,
     val processRecords: List<ProcessRecord> = emptyList(),
+    val etc: EtcInfo? = null,
 )
 
 /** 单个读取器失败信息。 */

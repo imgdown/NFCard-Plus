@@ -16,6 +16,7 @@ object AutoReader {
         WuhanReader(),
         CityUnionReader(),
         TUnionReader(),
+        EtcReader(),
         ShenzhenTongReader(),
         PbocEpReader(),
     )

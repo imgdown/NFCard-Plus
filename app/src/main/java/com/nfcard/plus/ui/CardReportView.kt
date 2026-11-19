@@ -10,6 +10,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.nfcard.plus.protocol.CityCodes
@@ -67,6 +68,8 @@ private fun CardAppView(app: CardApp) {
                 InfoRow("有效期", "${app.validFrom} 至 ${app.validTo}")
             }
 
+            app.etc?.let { EtcSection(it) }
+
             app.metro?.let { metro ->
                 HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
                 Text("地铁进出站", style = MaterialTheme.typography.titleMedium)
@@ -102,6 +105,13 @@ private fun CardAppView(app: CardApp) {
                 Text("交易明细（最近 ${app.transactions.size} 笔）", style = MaterialTheme.typography.titleMedium)
                 app.transactions.forEach { txn -> TxnRow(txn) }
             }
+
+            if (app.etc != null && app.transactions.isEmpty()) {
+                Text(
+                    "交易记录未读出（该文件需 PIN 验证，为避免锁卡风险不自动尝试）。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }
@@ -128,5 +138,72 @@ private fun TxnRow(txn: TxnRecord) {
     Column(modifier = Modifier.padding(vertical = 2.dp)) {
         Text("${txn.date} ${txn.time}  $typeText  $amountText", style = MaterialTheme.typography.bodyMedium)
         Text("序号 ${txn.seq} · 终端 ${txn.terminalId}", style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+private fun vehicleTypeText(code: Int): String = when (code) {
+    in 1..5 -> "客车 $code 类"
+    in 11..15 -> "货车 ${code - 10} 类"
+    else -> "代码 %02X".format(code)
+}
+
+@Composable
+private fun EtcSection(etc: com.nfcard.plus.protocol.model.EtcInfo) {
+    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+    Text("车辆与持卡人", style = MaterialTheme.typography.titleMedium)
+    etc.plate?.let { plate ->
+        Text(
+            plate + (etc.plateColor?.let { "（$it）" } ?: ""),
+            style = MaterialTheme.typography.headlineSmall,
+        )
+    }
+    etc.vehicleType?.let { InfoRow("车型", vehicleTypeText(it)) }
+    etc.holderName?.let { InfoRow("持卡人", it) }
+    etc.holderIdNumber?.let { MaskedIdRow(it) }
+    etc.holderIdType?.let { InfoRow("证件类型", "代码 %02X".format(it)) }
+
+    HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+    Text("卡片信息", style = MaterialTheme.typography.titleMedium)
+    InfoRow("卡号（内部编号）", etc.cardNo)
+    InfoRow("发卡方标识", etc.issuer)
+    InfoRow("卡片网络编号", etc.networkNo)
+    InfoRow("卡片类型", "代码 %02X".format(etc.cardType))
+    InfoRow("标准版本", if (etc.newStandard) "2015 全国联网新标准" else "旧标准")
+    if (etc.issueDate != null && etc.expiryDate != null) {
+        InfoRow("有效期", "${etc.issueDate} 至 ${etc.expiryDate}")
+    }
+
+    if (etc.passages.isNotEmpty()) {
+        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+        Text("入口/出口通行记录（${etc.passages.size} 条）", style = MaterialTheme.typography.titleMedium)
+        etc.passages.forEach { p ->
+            Column(modifier = Modifier.padding(vertical = 2.dp)) {
+                Text(p.time ?: "时间未知", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "路网 ${p.networkNo} · 收费站 ${p.stationNo} · 车道 ${p.lane} · 状态代码 ${p.ioState}",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        Text("收费站编号对应站名以发行方公布信息为准。", style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun MaskedIdRow(id: String) {
+    val showState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val masked = if (id.length > 7) id.take(3) + "*".repeat(id.length - 7) + id.takeLast(4) else id
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("证件号码", style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(if (showState.value) id else masked, style = MaterialTheme.typography.bodyMedium)
+            androidx.compose.material3.TextButton(onClick = { showState.value = !showState.value }) {
+                Text(if (showState.value) "隐藏" else "显示")
+            }
+        }
     }
 }
